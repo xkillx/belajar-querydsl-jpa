@@ -7,9 +7,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
-import com.querydsl.core.types.Predicate;
+import com.ucok.model.Category;
 import com.ucok.model.Product;
-import com.ucok.model.QProduct;
+import com.ucok.repository.CategoryQueryDslRepository;
+import com.ucok.repository.CategoryRepository;
+import com.ucok.repository.ProductQueryDslRepository;
 import com.ucok.repository.ProductRepository;
 
 @SpringBootApplication
@@ -22,30 +24,56 @@ public class QuerydslApplication {
 	}
 
 	@Bean
-	public CommandLineRunner demo(ProductRepository repository) {
+	public CommandLineRunner demo(ProductRepository productRepository, CategoryRepository categoryRepository,
+			CategoryQueryDslRepository categoryQueryDslRepository,
+			ProductQueryDslRepository productQueryDslRepository) {
 		return (args) -> {
-			repository.save(Product.builder().name("Aqua").price(15000).build());
-			repository.save(Product.builder().name("Indomie").price(2000).build());
-			repository.save(Product.builder().name("Kopi").price(2000).build());
-			repository.save(Product.builder().name("Aqua").price(15000).build());
-			
-			QProduct product = QProduct.product;
-			Predicate predicate = product.price.eq(2000);
-			
-			log.info("Products with price 2000:");
-			log.info("-------------------------------");
-			for (Product p : repository.findAll(predicate)) {
-				log.info(p.toString());
-			}
-			log.info("");
-			
+			Category category = new Category();
+			category.setName("Makanan");
+
+			Product product = new Product();
+			product.setCategory(category);
+			product.setName("Permen");
+			product.setPrice(1000);
+			category.getProducts().add(product);
+
+			product = new Product();
+			product.setCategory(category);
+			product.setName("Chiki");
+			product.setPrice(1000);
+			category.getProducts().add(product);
+
+			product = new Product();
+			product.setCategory(category);
+			product.setName("Indomie");
+			product.setPrice(2000);
+			category.getProducts().add(product);
+
+			product = new Product();
+			product.setCategory(category);
+			product.setName("Gado-Gado");
+			product.setPrice(10000);
+			category.getProducts().add(product);
+
+			categoryRepository.save(category);
+
+			/*
+			 * log.info("Products with price 2000:");
+			 * log.info("-------------------------------"); for (Product p :
+			 * productRepository.findAll(predicate)) { log.info(p.toString()); }
+			 * log.info("");
+			 */
 
 			log.info("Products found with findAll():");
 			log.info("-------------------------------");
-			for (Product p : repository.findAll()) {
-				log.info(p.toString());
+			for (Category c : categoryQueryDslRepository.findAll()) {
+				log.info(String.format("%d, %s", c.getId(), c.getName()));
+
+				c.getProducts().stream()
+						.forEach(p -> log.info(String.format("%d, %s, %d", p.getId(), p.getName(), p.getPrice())));
 			}
 			log.info("");
+
 		};
 	}
 }
